@@ -19,6 +19,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         login = (Button) findViewById(R.id.login);
         signUp = (Button) findViewById(R.id.signUp);
+        
+        
         login.setOnClickListener(new OnClickListener() {
 			
 			@Override

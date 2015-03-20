@@ -11,4 +11,32 @@
     
     
     />
+
+<Button
+    android:id="@+id/backButton"
+    style="?android:attr/buttonStyleSmall"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Back"
+    android:visibility="invisible" />
+
+<Button
+    android:id="@+id/sendFriendRequest"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Send Friend Request" />
+
+<Button
+    android:id="@+id/showRequests"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="View Friend Requests" />
+
+<Button
+    android:id="@+id/signout"
+    style="?android:attr/buttonStyleSmall"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Sign out" />
+
 </LinearLayout>

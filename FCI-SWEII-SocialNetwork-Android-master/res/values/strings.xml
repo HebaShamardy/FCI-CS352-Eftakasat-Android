@@ -9,5 +9,9 @@
     <string name="username">User name</string>
     <string name="password">Password</string>
     <string name="email">Email</string>
+    <string name="title_activity_send_request">SendRequestActivity</string>
+    <string name="title_activity_send_friend_request">SendFriendRequestActivity</string>
+    <string name="title_activity_add_friend">AddFriendActivity</string>
+    <string name="title_activity_show_friend_request">ShowFriendRequestActivity</string>
 
 </resources>

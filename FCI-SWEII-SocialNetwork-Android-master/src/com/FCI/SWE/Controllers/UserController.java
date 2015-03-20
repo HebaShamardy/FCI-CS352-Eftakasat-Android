@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,6 +18,7 @@ import android.widget.Toast;
 
 import com.FCI.SWE.Models.UserEntity;
 import com.FCI.SWE.SocialNetwork.HomeActivity;
+import com.FCI.SWE.SocialNetwork.ShowFriendRequestActivity;
 
 public class UserController {
 
@@ -32,18 +35,52 @@ public class UserController {
 
 	}
 
-	public void login(String userName, String password) {
-
+	public void login(String email, String password) {
+		
 		new Connection().execute(
-				"http://fci-swe-apps.appspot.com/rest/LoginService", userName,
+				"http://eftakasat-socialnetwork.appspot.com/rest/LoginService", email,
 				password, "LoginService");
 	}
 
 	public void signUp(String userName, String email, String password) {
 		new Connection().execute(
-				"http://fci-swe-apps.appspot.com/rest/RegistrationService", userName,
+				"http://eftakasat-socialnetwork.appspot.com/rest/RegistrationService", userName,
 				email, password, "RegistrationService");
 	}
+	
+	public void signOut() {
+		currentActiveUser=null;
+	}
+	
+	
+	public void sendFriendRequest(String femail) {
+		String uemail=currentActiveUser.getEmail();
+		new Connection().execute(
+				"http://eftakasat-socialnetwork.appspot.com/rest/sendFriendRequest", uemail,
+				femail, "sendFriendRequest");
+	}
+	
+	public void showFriendRequest() {
+		String uemail=currentActiveUser.getEmail();
+		new Connection().execute(
+				"http://eftakasat-socialnetwork.appspot.com/rest/showFriendRequests",uemail,
+				"showFriendRequests");
+	}
+	
+	public void acceptFriend(String femail) {
+		String uemail=currentActiveUser.getEmail();
+		new Connection().execute(
+				"http://eftakasat-socialnetwork.appspot.com/rest/AddFriendService", uemail,
+				femail, "AddFriendService");
+	}
+	
+	public void declineFriend(String femail) {
+		String uemail=currentActiveUser.getEmail();
+		new Connection().execute(
+				"http://eftakasat-socialnetwork.appspot.com/rest/denyFriendService", uemail,
+				femail, "denyFriendService");
+	}
+	
 
 	static private class Connection extends AsyncTask<String, String, String> {
 
@@ -54,12 +91,20 @@ public class UserController {
 			// TODO Auto-generated method stub
 			URL url;
 			serviceType = params[params.length - 1];
-			String urlParameters;
+			String urlParameters="";
 			if (serviceType.equals("LoginService"))
-				urlParameters = "uname=" + params[1] + "&password=" + params[2];
-			else
+				urlParameters = "email=" + params[1] + "&password=" + params[2];
+			else if(serviceType.equals("RegistrationService"))
 				urlParameters = "uname=" + params[1] + "&email=" + params[2]
 						+ "&password=" + params[3];
+			else if(serviceType.equals("sendFriendRequest"))
+				urlParameters = "uemail=" + params[1] + "&femail=" + params[2];
+			else if(serviceType.equals("showFriendRequests"))
+				urlParameters = "uemail=" + params[1];
+			else if(serviceType.equals("AddFriendService"))
+				urlParameters = "uemail=" + params[1] + "&femail=" + params[2];
+			else if(serviceType.equals("denyFriendService"))
+				urlParameters = "uemail=" + params[1] + "&femail=" + params[2];
 
 			HttpURLConnection connection;
 			try {
@@ -101,15 +146,16 @@ public class UserController {
 			// TODO Auto-generated method stub
 			super.onPostExecute(result);
 			try {
-				JSONObject object = new JSONObject(result);
 				
-				if(!object.has("Status") || object.getString("Status").equals("Failed")){
-					Toast.makeText(Application.getAppContext(), "Error occured", Toast.LENGTH_LONG).show();
-					return;
-				}
+				
 				
 				if (serviceType.equals("LoginService")) {
+					JSONObject object = new JSONObject(result);
 					
+					if(!object.has("Status") || object.getString("Status").equals("Failed")){
+						Toast.makeText(Application.getAppContext(), "Error occured", Toast.LENGTH_LONG).show();
+						return;
+					}
 					currentActiveUser = UserEntity.createLoginUser(result);
 					
 					Intent homeIntent = new Intent(Application.getAppContext(),
@@ -118,16 +164,69 @@ public class UserController {
 					
 					homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 					/* here you should initialize user entity */
+					homeIntent.putExtra("Service", "Login");
 					homeIntent.putExtra("status", object.getString("Status"));
 					homeIntent.putExtra("name", object.getString("name"));
 					
 					Application.getAppContext().startActivity(homeIntent);
 				}
-				else{
+				else if(serviceType.equals("RegistrationService")){
+					JSONObject object = new JSONObject(result);
+					
+					if(!object.has("Status") || object.getString("Status").equals("Failed")){
+						Toast.makeText(Application.getAppContext(), "Error occured", Toast.LENGTH_LONG).show();
+						return;
+					}
 					Intent homeIntent = new Intent(Application.getAppContext(),
 							HomeActivity.class);
 					homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					homeIntent.putExtra("Service", "signup");
 					homeIntent.putExtra("status", "Registered successfully");
+					Application.getAppContext().startActivity(homeIntent);
+				}
+				else if(serviceType.equals("sendFriendRequest")){
+					JSONObject object = new JSONObject(result);
+					
+					if(!object.has("Status") || object.getString("Status").equals("Failed")){
+						Toast.makeText(Application.getAppContext(), "Error occured", Toast.LENGTH_LONG).show();
+						return;
+					}
+					Intent homeIntent = new Intent(Application.getAppContext(),
+							HomeActivity.class);
+					homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					homeIntent.putExtra("Service", "sendFriendRequest");
+					homeIntent.putExtra("status", "Friend request was sent successfully");
+					homeIntent.putExtra("email", object.getString("friend email"));
+					Application.getAppContext().startActivity(homeIntent);
+				}
+				else if(serviceType.equals("showFriendRequests")){
+					//JSONString requestEmails = new JSONString(result);
+					Intent showRequestIntent = new Intent(Application.getAppContext(),
+							ShowFriendRequestActivity.class);
+					showRequestIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					showRequestIntent.putExtra("Service", "showFriendRequest");
+					showRequestIntent.putExtra("status", "Choose Email below to accept or deny request");
+					showRequestIntent.putExtra("array",result);
+					Application.getAppContext().startActivity(showRequestIntent);
+				}
+				else if(serviceType.equals("AddFriendService")){
+					//JSONString requestEmails = new JSONString(result);
+					Intent homeIntent = new Intent(Application.getAppContext(),
+							HomeActivity.class);
+					homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					homeIntent.putExtra("Service", "AddFriendService");
+					homeIntent.putExtra("array",result);
+					Toast.makeText(Application.getAppContext(), "Request Accepted", Toast.LENGTH_LONG).show();
+					Application.getAppContext().startActivity(homeIntent);
+				}
+				else if(serviceType.equals("denyFriendService")){
+					//JSONString requestEmails = new JSONString(result);
+					Intent homeIntent = new Intent(Application.getAppContext(),
+							HomeActivity.class);
+					homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+					homeIntent.putExtra("Service", "denyFriendService");
+					homeIntent.putExtra("array",result);
+					Toast.makeText(Application.getAppContext(), "Request Denied", Toast.LENGTH_LONG).show();
 					Application.getAppContext().startActivity(homeIntent);
 				}
 
